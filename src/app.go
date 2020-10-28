@@ -15,7 +15,10 @@ var books []Book
 func getBooks(repo Repository) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(books)
+		books, err := repo.Find()
+		if err != nil {
+			json.NewEncoder(w).Encode(books)
+		}
 	}
 }
 
@@ -27,8 +30,11 @@ func getBook(repo Repository) http.HandlerFunc {
 		for _, item := range books {
 			itemID, _ := strconv.ParseInt(params["id"], 10, 32)
 			if string(rune(itemID)) == params["id"] {
-				json.NewEncoder(w).Encode(item)
-				return
+				item, err := repo.FindByID(string(rune(item.ID)))
+				if err != nil { 
+					json.NewEncoder(w).Encode(item)
+					return
+				}
 			}
 		}
 		json.NewEncoder(w).Encode(&Book{})
@@ -41,6 +47,10 @@ func createBook(repo Repository) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		var book Book
 		_ = json.NewDecoder(r.Body).Decode(&book)
+		err := repo.Create(book)
+		if err != nil {
+		  return 
+		}
 		books = append(books, book)
 		json.NewEncoder(w).Encode(book)
 	}
@@ -52,9 +62,13 @@ func deleteBook(repo Repository) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		params := mux.Vars(r)
 		for idx, item := range books {
-				bookID, _ := strconv.ParseInt(params["id"], 10, 32)
-				item.ID = int(bookID)
+			bookID, _ := strconv.ParseInt(params["id"], 10, 32)
+			item.ID = int(bookID)
 			if string(rune(item.ID)) == params["id"] {
+				err :=  repo.Delete(string(rune(item.ID)))
+				if err != nil {
+					break
+				}
 				books = append(books[:idx], books[idx+1:]...)
 				break
 			}
@@ -74,8 +88,10 @@ func updateBook(repo Repository) http.HandlerFunc {
 				books = append(books[:idx], books[idx+1:]...)
 				var book Book
 				_ = json.NewDecoder(r.Body).Decode(&book)
-				bookID, _ := strconv.ParseInt(params["id"], 10, 32)
-				book.ID = int(bookID)
+				err := repo.Update(book)
+				if err != nil {
+					return
+				} 
 				books = append(books, book)
 				json.NewEncoder(w).Encode(book)
 				return

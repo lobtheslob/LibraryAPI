@@ -20,7 +20,10 @@ type Repository struct {
 }
 
 //Creates a book in the library
-func (r Repository) Create(ctx context.Context, book Book) error {
+func (r Repository) Create(book Book) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	query := `INSERT INTO book (id, name, author, isbn) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE id = ?, name = ?, author = ?, isbn = ?`
 	log.Info("book in repo: ", book)
 	_, err := r.db.ExecContext(
@@ -42,7 +45,6 @@ func (r Repository) Create(ctx context.Context, book Book) error {
 
 	return nil
 }
-
 // FindByID attaches the book repository and find data based on id
 func (r Repository) FindByID(id string) (*Book, error) {
 	book := new(Book)
