@@ -28,13 +28,12 @@ func main() {
 	// Init router
 	r := mux.NewRouter()
 
-	//TODO - implement repo in remaining HandleFuncs with closure like getBooks
-	// Route handles & endpoints
+	// Route handles & endpoint
 	r.HandleFunc("/books", getBooks(repo)).Methods("GET")
-	r.HandleFunc("/books/{id}", getBook).Methods("GET")
-	r.HandleFunc("/books", createBook).Methods("POST")
-	r.HandleFunc("/books/{id}", updateBook).Methods("PUT")
-	r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
+	r.HandleFunc("/books/{id}", getBook(repo)).Methods("GET")
+	r.HandleFunc("/books", createBook(repo)).Methods("POST")
+	r.HandleFunc("/books/{id}", updateBook(repo)).Methods("PUT")
+	r.HandleFunc("/books/{id}", deleteBook(repo)).Methods("DELETE")
 
 	// Start server
 	log.Fatal(http.ListenAndServe(":8080", r))

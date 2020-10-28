@@ -36,6 +36,7 @@ func connectToDB() (*sql.DB) {
 	}()
 
 	// wait for DB to be setup
+	// for loop / channel is for appyling multiple db connections if needed
 	var mysqlDB *sql.DB
 
 	done := false
